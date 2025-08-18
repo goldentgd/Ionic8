@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component,inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { 
   IonHeader, 
@@ -11,10 +11,17 @@ import {
   IonIcon,
   IonList,
   IonLabel,
-  IonAlert
+  IonAlert,
+  IonItemSliding,
+  IonItemOption,
+  IonItemOptions,
+  IonReorderGroup,
+  IonReorder,
+  ReorderEndCustomEvent
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline } from 'ionicons/icons';
+import { addOutline, trashOutline } from 'ionicons/icons';
+import { Alert } from 'src/app/services/alert';
 
 @Component({
   selector: 'app-home',
@@ -32,17 +39,25 @@ import { addOutline } from 'ionicons/icons';
     IonIcon,
     IonList,
     IonLabel,
-    IonAlert
+    IonAlert,
+    IonItemSliding,
+    IonItemOption,
+    IonItemOptions,
+    IonReorderGroup,
+    IonReorder
   ],
 })
 export class HomePage {
+
+private alert: Alert = inject(Alert)
 
   public tasks: string[] = [];
   public task: string = '';
 
   constructor() {
     addIcons({
-      addOutline
+      addOutline,
+      trashOutline
     })
   }
 
@@ -53,14 +68,38 @@ export class HomePage {
       this.tasks.push(this.task);
       console.log(this.tasks);
       this.task = '';
+      this.alert.alertMessage('Éxito', 'La tarea se ha añadido correctamente');
     }else{
       console.log('La tarea ya existe');
+      this.alert.alertMessage('Error', 'La tarea ya existe');
     }
 
 
   }
   private existsTask(task: string){
     return this.tasks.find((item:string) => task.toUpperCase().trim() === item.toUpperCase().trim())
+  }
+
+  confirmDelete(task: string) {
+    this.alert.alertConfirm(
+      'Confirmación','¿Estás seguro de que quieres eliminar esta tarea?',
+      () => this.removeTask(task)
+    )
+  }
+
+  private removeTask(task: string) {
+    console.log("Vamosa eliminar la tarea: " + task);
+
+    const index = this.tasks.findIndex((item:string) => task.toUpperCase().trim() === item.toUpperCase().trim())
+
+    if(index != -1){
+      this.tasks.splice(index,1)
+    }
+  }
+
+  orderTasks(event:ReorderEndCustomEvent){
+    this.tasks = event.detail.complete(this.tasks);
+    console.log(this.tasks);
   }
 
 }

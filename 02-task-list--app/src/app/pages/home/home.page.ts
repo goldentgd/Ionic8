@@ -22,6 +22,7 @@ import {
 import { addIcons } from 'ionicons';
 import { addOutline, trashOutline } from 'ionicons/icons';
 import { Alert } from 'src/app/services/alert';
+import { Preferences } from '@capacitor/preferences';
 
 @Component({
   selector: 'app-home',
@@ -53,12 +54,24 @@ private alert: Alert = inject(Alert)
 
   public tasks: string[] = [];
   public task: string = '';
+  private readonly KEY_TASKS = 'ddr_key_tasks'
 
   constructor() {
     addIcons({
       addOutline,
       trashOutline
     })
+  }
+
+  async ionViewWillEnter() {
+    const tasksPreferences = await Preferences.get({key:this.KEY_TASKS})
+
+    if(tasksPreferences.value){
+      const tasks = JSON.parse(tasksPreferences.value);
+      if(Array.isArray(tasks)){
+        this.tasks = tasks;
+      }
+    }
   }
 
   addTask(){
@@ -68,6 +81,7 @@ private alert: Alert = inject(Alert)
       this.tasks.push(this.task);
       console.log(this.tasks);
       this.task = '';
+      this.saveTasks();
       this.alert.alertMessage('Éxito', 'La tarea se ha añadido correctamente');
     }else{
       console.log('La tarea ya existe');
@@ -94,12 +108,18 @@ private alert: Alert = inject(Alert)
 
     if(index != -1){
       this.tasks.splice(index,1)
+      this.saveTasks();
     }
   }
 
   orderTasks(event:ReorderEndCustomEvent){
     this.tasks = event.detail.complete(this.tasks);
     console.log(this.tasks);
+    this.saveTasks();
+  }
+
+  saveTasks(){
+    Preferences.set({key: this.KEY_TASKS, value: JSON.stringify(this.tasks)})
   }
 
 }

@@ -1,20 +1,40 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { Component, inject, Input, OnInit } from '@angular/core';
+import { IonContent, LoadingController} from '@ionic/angular/standalone';
+import { Pokemon } from 'src/app/services/pokemon';
+import { IPokemon } from 'src/app/models/pokemon.model';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-detail-pokemon',
   templateUrl: './detail-pokemon.page.html',
   styleUrls: ['./detail-pokemon.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonContent,
+    JsonPipe
+  ]
 })
-export class DetailPokemonPage implements OnInit {
+export class DetailPokemonPage {
 
-  constructor() { }
+  private pokemonService: Pokemon = inject(Pokemon);
+  private loadingController: LoadingController = inject(LoadingController);
 
-  ngOnInit() {
+  @Input() id!: number;
+
+  public pokemon!: IPokemon;
+
+  async ionViewWillEnter(){
+    console.log(this.id);
+
+    const loading = await this.loadingController.create({
+          message: 'Cargando...'
+        });
+        loading.present();
+
+    this.pokemonService.getPokemon(this.id).then((pokemon:IPokemon)=>{
+      this.pokemon = pokemon;
+    }).finally(()=>{
+        loading?.dismiss();
+      })
   }
 
 }
